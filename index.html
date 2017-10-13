@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>snake</title>
+</head>
+ 
+<body>
+
+<canvas id="myCanvas" width="1000" height="480">
+</canvas>
+
+<script>
+
+var game_width = 800;
+var game_height = 480;
+var game_banner = 200;
+var cube = 10;
+var map_width = 80;
+var map_height = 48;
+
+var is_running = false;
+var loop_id = 0;
+
+var time = 0;
+var score = 0;
+
+var snake_x;
+var snake_y;
+var snake_body_count = 3;
+var snake_array = new Array();
+var snake_dir = 4;//1 = up ,  2 = down ,3 = left ,4 = right
+
+function create_snake(x , y){
+	var obj = new Object()
+	obj.x = x;
+	obj.y = y;
+	return obj;
+}
+
+function game_init(){
+	is_running = true;
+	time = 0;
+	score = 0;
+	
+	snake_dir = 4;
+	
+	snake_x = 10;
+	snake_y = 20;
+	snake_body_count = 5;
+	snake_array[0] = create_snake(snake_x , snake_y);
+	snake_array[1] = create_snake(snake_x - 1 , snake_y);
+	snake_array[2] = create_snake(snake_x - 2 , snake_y);
+	snake_array[3] = create_snake(snake_x - 3 , snake_y);
+	snake_array[4] = create_snake(snake_x - 4 , snake_y);
+	//snake_reverse();
+	
+	loop_id = setInterval(function(){
+		game_update();
+	}, 200);
+}
+
+function game_update(){
+	ctx.clearRect(0, 0, game_width + game_banner, game_height);
+
+	time++;
+	render_bg(ctx);//
+	render_snake(ctx);
+	render_text(ctx);
+	
+	//game logic
+	snake_move();
+}
+
+function render_snake(ctx){
+	ctx.fillStyle="#00ff00";
+	
+	//console.log("i = "+snake_array[i].x);
+	for(var i = 0;i<snake_body_count;i++){
+		console.log(i+ " = "+snake_array[i].x);
+		ctx.fillRect(snake_array[i].x * cube,snake_array[i].y * cube, cube, cube);
+	}//end for i
+}
+
+function snake_reverse(){
+	var last_node_x;
+	var last_node_y;
+	
+	var cpySnake = new Array();
+	for(var i = 0;i<snake_body_count;i++){
+		cpySnake[i] = snake_array[i];
+	}//end for i
+	
+	for(var i = 0;i<snake_body_count;i++){		
+		if(i == 0){//is head
+			snake_array[i] = create_snake(snake_x , snake_y);
+		}else{			
+			snake_array[i]= cpySnake[i - 1];
+		}
+		console.log(snake_array[i]);
+	}//end for i
+	
+}
+
+function snake_move(){
+	switch(snake_dir){
+		case 1://up
+			snake_y -= 1;
+			if(snake_y < 0){
+				snake_y = map_height - 1;
+			}
+		break;
+		case 2://down
+			snake_y += 1;
+			if(snake_y >= map_height){
+				snake_y = 0;
+			}
+		break;
+		case 3://left
+			snake_x -= 1;
+			if(snake_x < 0){
+				snake_x = map_width - 1;
+			}
+		break;
+		case 4://right
+			snake_x += 1;
+			if(snake_x >= map_width){
+				snake_x = 0;
+			}
+		break;
+	}//end switch
+	snake_reverse();
+}
+
+function dirChange(dir){
+	if(snake_dir == 1 && dir == 2 || snake_dir == 2 && dir == 1
+		|| snake_dir == 3 && dir == 4 || snake_dir == 4 && dir == 3 ){//方向冲突 不处理
+		return;
+	}
+	snake_dir = dir;
+}
+
+function render_bg(ctx){
+	ctx.fillStyle="#000000";
+	ctx.fillRect(0,0, game_width, game_height);
+}
+
+function render_text(ctx){
+	ctx.fillStyle="#ff0000";
+	ctx.font="30px Verdana";
+	ctx.fillText("时间:" + time, game_width + 10,40);
+	
+	ctx.fillText("得分:" + score, game_width + 10, 90);
+}
+
+function game_end(){
+	if(is_running){
+		clearInterval(loop_id);
+		is_running = false;
+	}	
+}
+
+
+var c=document.getElementById("myCanvas");
+var ctx=c.getContext("2d");
+
+game_init();
+
+document.onkeyup = function keyUp(e) {
+	switch(e.keyCode){
+		case 27://esc key
+			game_end();
+			break;
+		case 32://space key
+			game_init();
+			break;
+		case 38://up
+			dirChange(1);
+			break;
+		case 40://down
+			dirChange(2);
+			break;
+		case 37://left
+			dirChange(3);
+			break;
+		case 39://right
+			dirChange(4);
+			break;
+		
+		default:
+		//alert(e.keyCode);
+		break;
+	}//end switch
+	
+};
+</script>
+</body>
+</html>
