@@ -11,7 +11,7 @@
 </canvas>
 
 <script>
-
+var game_status = 1;//1 = 正常  2= gameover
 var game_width = 800;
 var game_height = 480;
 var game_banner = 200;
@@ -68,6 +68,7 @@ function create_apple(){
 
 function game_init(){
 	is_running = true;
+	game_status = 1;
 	time = 0;
 	score = 0;
 	
@@ -87,20 +88,39 @@ function game_init(){
 	
 	loop_id = setInterval(function(){
 		game_update();
-	}, 200);
+	}, 100);
 }
 
 function game_update(){
-	//game logic
-	snake_move();
-
 	ctx.clearRect(0, 0, game_width + game_banner, game_height);
-	
-	time++;
+	//game logic
 	render_bg(ctx);//
-	render_snake(ctx);
-	render_apple(ctx);
+	
+	switch(game_status){
+		case 1://game normal
+			time++;
+			snake_move();
+			render_snake(ctx);
+			render_apple(ctx);
+		break;
+		case 2://game over
+			render_gameover(ctx);
+		break;
+	}//end switch
+		
 	render_text(ctx);
+}
+
+function render_gameover(ctx){
+	ctx.textAlign = 'center';
+	ctx.fillStyle="#ff00ff";
+	ctx.font="60px Verdana";
+	ctx.fillText("G A M E   O V E R!!!", game_width / 2,200);
+	
+	ctx.fillStyle="#ffffff";
+	ctx.font="20px Verdana";
+	ctx.fillText("按下空格键重新开始", game_width / 2,300);
+	//ctx.fillText("得分:" + score, game_width + 10, 90);
 }
 
 function render_apple(ctx){
@@ -156,6 +176,12 @@ function snake_eat_apple(){
 	create_apple();
 }
 
+function snake_hit(){//game over
+	game_status = 2;
+	game_end();
+	render_gameover(ctx);
+}
+
 function snake_move(){
 	switch(snake_dir){
 		case 1://up
@@ -185,9 +211,18 @@ function snake_move(){
 	}//end switch
 	snake_reverse();
 	
+	// is head hit body?
+	for(var i = 1;i<snake_body_count;i++){
+		if(snake_array[i].x == snake_x && snake_array[i].y == snake_y){
+			snake_hit();
+			return;
+		}
+	}//end for i
+	
 	//head is hit apple?
 	if(snake_x == apple_x && snake_y == apple_y){
 		snake_eat_apple();
+		return;
 	}
 }
 
@@ -207,8 +242,8 @@ function render_bg(ctx){
 function render_text(ctx){
 	ctx.fillStyle="#ff0000";
 	ctx.font="30px Verdana";
+	ctx.textAlign = 'left';
 	ctx.fillText("时间:" + time, game_width + 10,40);
-	
 	ctx.fillText("得分:" + score, game_width + 10, 90);
 }
 
@@ -222,6 +257,7 @@ function game_end(){
 
 var c=document.getElementById("myCanvas");
 var ctx=c.getContext("2d");
+ctx.textAlign = 'center';
 
 game_init();
 
