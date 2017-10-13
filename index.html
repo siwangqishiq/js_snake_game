@@ -31,12 +31,40 @@ var snake_body_count = 3;
 var snake_array = new Array();
 var snake_dir = 4;//1 = up ,  2 = down ,3 = left ,4 = right
 
+var apple_x;
+var apple_y;
+
 function create_snake(x , y){
 	var obj = new Object()
 	obj.x = x;
 	obj.y = y;
 	return obj;
 }
+
+function gen_random(start, end){
+	return Math.floor(Math.random() * (end - start) + start);
+}
+
+function check_position_ishit_snake(x , y){
+	var ret = false;
+	for(var i = 0;i<snake_body_count;i++){
+		if(snake_array[i].x == x && snake_array[i].y == y)
+			return true;
+	}//end for i
+	return false;
+}
+
+function create_apple(){
+	var x,y;
+	do{
+		x = gen_random(0 , map_width - 1);
+		y = gen_random(0 , map_height - 1);
+	}while(check_position_ishit_snake(x , y))
+	
+	apple_x = x;
+	apple_y = y;
+}
+
 
 function game_init(){
 	is_running = true;
@@ -47,13 +75,15 @@ function game_init(){
 	
 	snake_x = 10;
 	snake_y = 20;
-	snake_body_count = 5;
+	snake_body_count = 4;
 	snake_array[0] = create_snake(snake_x , snake_y);
 	snake_array[1] = create_snake(snake_x - 1 , snake_y);
 	snake_array[2] = create_snake(snake_x - 2 , snake_y);
 	snake_array[3] = create_snake(snake_x - 3 , snake_y);
-	snake_array[4] = create_snake(snake_x - 4 , snake_y);
 	//snake_reverse();
+	
+	//gen apple position
+	create_apple();
 	
 	loop_id = setInterval(function(){
 		game_update();
@@ -61,15 +91,21 @@ function game_init(){
 }
 
 function game_update(){
-	ctx.clearRect(0, 0, game_width + game_banner, game_height);
+	//game logic
+	snake_move();
 
+	ctx.clearRect(0, 0, game_width + game_banner, game_height);
+	
 	time++;
 	render_bg(ctx);//
 	render_snake(ctx);
+	render_apple(ctx);
 	render_text(ctx);
-	
-	//game logic
-	snake_move();
+}
+
+function render_apple(ctx){
+	ctx.fillStyle="#ff0000";
+	ctx.fillRect(apple_x * cube,apple_y * cube, cube, cube);
 }
 
 function render_snake(ctx){
@@ -77,15 +113,12 @@ function render_snake(ctx){
 	
 	//console.log("i = "+snake_array[i].x);
 	for(var i = 0;i<snake_body_count;i++){
-		console.log(i+ " = "+snake_array[i].x);
+		//console.log(i+ " = "+snake_array[i].x);
 		ctx.fillRect(snake_array[i].x * cube,snake_array[i].y * cube, cube, cube);
 	}//end for i
 }
 
-function snake_reverse(){
-	var last_node_x;
-	var last_node_y;
-	
+function snake_reverse(){	
 	var cpySnake = new Array();
 	for(var i = 0;i<snake_body_count;i++){
 		cpySnake[i] = snake_array[i];
@@ -97,9 +130,30 @@ function snake_reverse(){
 		}else{			
 			snake_array[i]= cpySnake[i - 1];
 		}
-		console.log(snake_array[i]);
+		//console.log(snake_array[i]);
+	}//end for i
+}
+
+function snake_eat_apple(){
+	score += 5;
+	snake_x = apple_x;
+	snake_y = apple_y;
+	
+	var cpySnake = new Array();
+	for(var i = 0;i<snake_body_count;i++){
+		cpySnake[i] = snake_array[i];
 	}//end for i
 	
+	snake_body_count++;
+	for(var i = 0;i<snake_body_count;i++){		
+		if(i == 0){//is head
+			snake_array[0] = create_snake(snake_x , snake_y);
+		}else{			
+			snake_array[i]= cpySnake[i - 1];
+		}
+	}//end for i
+	
+	create_apple();
 }
 
 function snake_move(){
@@ -130,6 +184,11 @@ function snake_move(){
 		break;
 	}//end switch
 	snake_reverse();
+	
+	//head is hit apple?
+	if(snake_x == apple_x && snake_y == apple_y){
+		snake_eat_apple();
+	}
 }
 
 function dirChange(dir){
